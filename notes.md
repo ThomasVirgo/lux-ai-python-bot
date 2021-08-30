@@ -1,0 +1,1 @@
+- run ``` lux-ai-2021 main.py main.py --storeLogs=false ``` to avoid npm error

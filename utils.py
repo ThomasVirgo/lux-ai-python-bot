@@ -1,6 +1,13 @@
 from lux.game_map import Position
 import math
 
+def create_citytile_list(player):
+    citytiles = []
+    for k, city in player.cities.items():
+                        for city_tile in city.citytiles:
+                            citytiles.append(city_tile)
+    return citytiles
+
 def create_circular_path(citytile_position, target_position):
         #edge case that city tile and target have the same x co-ordinate
         if citytile_position.y == target_position.y:
@@ -31,10 +38,8 @@ def determine_current_move_target(unit_position, circular_path, citytile_positio
     for idx, pos in enumerate(circular_path):
         if unit_position.equals(pos):
             if idx == 3:
-                print(circular_path[0].x, circular_path[0].y)
                 return circular_path[0]
             else:
-                print(circular_path[idx+1].x, circular_path[idx+1].y)
                 return circular_path[idx+1]
         if unit_position.x == pos.x or unit_position.y == pos.y:
             positions_unit_is_between.append({
@@ -71,5 +76,28 @@ def is_collision_going_to_happen(new_unit_positions, target_position, units):
     return False
 
 
-def is_square_possible():
+def find_build_location(player, map):
+    first_city_tile = create_citytile_list(player)[0]
+    available_cells = []
+    for i in range(first_city_tile.pos.x-1, first_city_tile.pos.x+2):
+        for j in range(first_city_tile.pos.y-1, first_city_tile.pos.y+2):
+            if Position(i,j).equals(first_city_tile.pos): continue
+            cell = map.get_cell(i,j)
+            if not cell.has_resource():
+                available_cells.append(cell)
+    sqaure = []
+    for current_cell in available_cells:
+        adjacent_cells = []
+        for other_cell in available_cells:
+            if current_cell.pos.equals(other_cell.pos): continue
+            if abs(current_cell.pos.x - other_cell.pos.x) <= 1 and abs(current_cell.pos.y - other_cell.pos.y) <= 1:
+                adjacent_cells.append(other_cell)
+        if len(adjacent_cells) == 2:
+            square =  adjacent_cells
+    for cell in square:
+        if not cell.citytile:
+            return cell
+    return None
+
+def get_new_coordinate_given_action(action):
     pass

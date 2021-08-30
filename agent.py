@@ -4,7 +4,7 @@ from lux.game_map import Cell, RESOURCE_TYPES
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-from utils import create_circular_path, determine_current_move_target, get_closest_citytile, is_collision_going_to_happen
+from utils import create_circular_path, determine_current_move_target, get_closest_citytile, is_collision_going_to_happen, find_build_location, create_citytile_list
 
 DIRECTIONS = Constants.DIRECTIONS
 game_state = None
@@ -50,13 +50,21 @@ def agent(observation, configuration):
     for unit in player.units:
         if unit.is_worker() and unit.can_act():
             # if the unit can build a city tile then do so as long as not above city tile goal
-            if unit.can_build(game_state.map) and total_city_tiles() < city_tile_goal:
-                actions.append(unit.build_city())
-                break
+            if unit.can_build(game_state.map) and total_city_tiles() < city_tile_goal :
+                build_location_cell = find_build_location(player, game_state.map)
+                if unit.pos.equals(build_location_cell.pos):
+                    actions.append(unit.build_city())
+                    break
+                else: 
+                    actions.append(unit.move(unit.pos.direction_to(build_location_cell.pos)))
+                    break
+                
 
             closest_dist = math.inf
             closest_resource_tile = None
-            # if unit.get_cargo_space_left() > 0:
+            on_cell = game_state.map.get_cell(unit.pos.x, unit.pos.y)
+            if unit.get_cargo_space_left() > 0 and on_cell.has_resource():
+                continue
             # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
             for resource_tile in resource_tiles:
                 # only collect wood to begin with
@@ -74,26 +82,13 @@ def agent(observation, configuration):
                 if target_pos and not is_collision_going_to_happen(new_unit_positions, target_pos, player.units):
                     new_unit_positions.append(target_pos)
                     actions.append(unit.move(unit.pos.direction_to(target_pos)))
-                # actions.append(unit.move(unit.pos.direction_to(closest_resource_tile.pos)))
-            # else:
-                # if unit is a worker and there is no cargo space left, and we have cities, lets return to them
-                # if len(player.cities) > 0:
-                #     closest_dist = math.inf
-                #     closest_city_tile = None
-                #     for k, city in player.cities.items():
-                #         for city_tile in city.citytiles:
-                #             dist = city_tile.pos.distance_to(unit.pos)
-                #             if dist < closest_dist:
-                #                 closest_dist = dist
-                #                 closest_city_tile = city_tile
-                #     if closest_city_tile is not None:
-                #         move_dir = unit.pos.direction_to(closest_city_tile.pos)
-                #         actions.append(unit.move(move_dir))
-
+                
+            
     # iterate over all our citytiles and do something with them
-
     for k, city in player.cities.items():
         for city_tile in city.citytiles:
             if city_tile.can_act() and len(player.units) < total_city_tiles():
                 actions.append(city_tile.build_worker())
+            elif city_tile.can_act():
+                actions.append(city_tile.research())
     return actions

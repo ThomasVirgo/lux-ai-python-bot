@@ -1,5 +1,5 @@
 my_dict = {
-    "hi":"hello"
+    "hi": "hello"
 }
 
-print(len(my_dict.items()))
+print(my_dict.items())

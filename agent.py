@@ -4,7 +4,7 @@ from lux.game_map import Cell, RESOURCE_TYPES
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-from utils import create_circular_path, determine_current_move_target, get_closest_citytile, is_collision_going_to_happen, find_build_location, create_citytile_list
+from utils import create_circular_path, determine_current_move_target, get_closest_citytile, is_collision_going_to_happen, find_build_location, create_citytile_list, get_new_coordinate_given_action
 
 DIRECTIONS = Constants.DIRECTIONS
 game_state = None
@@ -52,12 +52,17 @@ def agent(observation, configuration):
             # if the unit can build a city tile then do so as long as not above city tile goal
             if unit.can_build(game_state.map) and total_city_tiles() < city_tile_goal :
                 build_location_cell = find_build_location(player, game_state.map)
-                if unit.pos.equals(build_location_cell.pos):
-                    actions.append(unit.build_city())
-                    break
-                else: 
-                    actions.append(unit.move(unit.pos.direction_to(build_location_cell.pos)))
-                    break
+                if build_location_cell is not None:
+                    print(build_location_cell.pos)
+                    if unit.pos.equals(build_location_cell.pos):
+                        actions.append(unit.build_city())
+                        break
+                    else:
+                        new_position = get_new_coordinate_given_action(unit.move(unit.pos.direction_to(build_location_cell.pos)), unit.pos)
+                        if not is_collision_going_to_happen(new_unit_positions, new_position, player.units):
+                            actions.append(unit.move(unit.pos.direction_to(build_location_cell.pos)))
+                            new_unit_positions.append(new_position)
+                        break
                 
 
             closest_dist = math.inf

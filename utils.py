@@ -79,13 +79,31 @@ def is_collision_going_to_happen(new_unit_positions, target_position, units):
 def find_build_location(player, map):
     first_city_tile = create_citytile_list(player)[0]
     available_cells = []
-    for i in range(first_city_tile.pos.x-1, first_city_tile.pos.x+2):
-        for j in range(first_city_tile.pos.y-1, first_city_tile.pos.y+2):
+    #need to consider case that first city tile is on edge
+    start_x = first_city_tile.pos.x-1
+    end_x = first_city_tile.pos.x+2
+    start_y = first_city_tile.pos.y-1
+    end_y = first_city_tile.pos.y+2
+    if first_city_tile.pos.x == 0:
+        start_x = 0
+        end_x = 2
+    elif first_city_tile.pos.x == map.width-1:
+        start_x = first_city_tile.pos.x-1
+        end_x = map.width-1
+    elif first_city_tile.pos.y == 0:
+        start_y = 0
+        end_y = 2
+    elif first_city_tile.pos.x == map.width-1:
+        start_y = first_city_tile.pos.x-1
+        end_y = map.height-1
+    
+    for i in range(start_x, end_x):
+        for j in range(start_y, end_y):
             if Position(i,j).equals(first_city_tile.pos): continue
             cell = map.get_cell(i,j)
             if not cell.has_resource():
                 available_cells.append(cell)
-    sqaure = []
+    square = []
     for current_cell in available_cells:
         adjacent_cells = []
         for other_cell in available_cells:
@@ -99,5 +117,7 @@ def find_build_location(player, map):
             return cell
     return None
 
-def get_new_coordinate_given_action(action):
-    pass
+def get_new_coordinate_given_action(action, unit_position):
+    direction = action[-1]
+    new_position = unit_position.translate(direction, 1)
+    return new_position
